@@ -1,0 +1,61 @@
+---
+title: "STA510 — Bayesian Methods"
+subtitle: "Interactive study reference for the course modules and a workflow tracker for the individual project"
+toc: false
+---
+
+## Welcome
+
+This app follows the six modules of the STA510 course notes, from what a probability is to a full Bayesian workflow for generalised linear mixed models (GLMM), and ends with a step-by-step guide for your individual project. The core idea is the same everywhere: **prior × likelihood → posterior**, and then everything you want (estimates, intervals, predictions, decisions) comes from the posterior or from draws of it.
+
+::: {.grid}
+
+::: {.g-col-12 .g-col-md-4}
+### Foundations
+- [M1 · Bayesian concepts](module1.qmd)
+- [M2 · Conjugate priors](module2.qmd)
+
+*Seminars 1–2*
+:::
+
+::: {.g-col-12 .g-col-md-4}
+### Computing and checking
+- [M3 · MCMC and brms](module3.qmd)
+- [M4 · Model checks, comparison, stacking](module4.qmd)
+
+*Seminars 3–4*
+:::
+
+::: {.g-col-12 .g-col-md-4}
+### GLMM and workflow
+- [M5 · Hierarchical models](module5.qmd)
+- [M6 · Workflow and priors](module6.qmd)
+- [Individual project](project.qmd) 🧩
+
+*Seminar 5, lectures, project*
+:::
+
+:::
+
+---
+
+## How to study with it
+
+1. **Read a module, Part A first.** Part A is concepts with quizzes and needs no code. Every section has a status control under its heading: **Not reviewed / Reviewed / Confident**. Click as you go.
+2. **Then Part B.** Small R exercises run in your browser (*Run Code*); the **RStudio tasks** use brms on your own computer. Each task simulates its own data and has a hidden solution, tested with brms 2.23.
+3. **Plan the project** on the [project page](project.qmd): whether ESS works for you, ten steps with a status tracker (**Not started / In progress / Done**) and a starter script tested on your Swedish ESS file.
+4. **Check the [dashboard](dashboard.qmd)** for what is left, and look up terms in the [glossary](glossary.qmd) or with search (top right).
+
+## What the badges mean
+
+| Badge | Meaning |
+|---|---|
+| <span class="flag-badge flag-ilo">🎯 Syllabus outcome</span> | The section directly covers one of the **intended learning outcomes in the STA510 syllabus**. The outcomes are official; which section covers which outcome was decided for this app. |
+| <span class="flag-badge flag-project">🧩 Needed for your project</span> | **AI-inferred**: a skill you will use in the individual GLMM project. Not stated by the teacher. |
+
+::: {.callout-note}
+## The course is examined by seminars and a project, not a written exam
+Seminar participation (at least four of five, with a self-reflection before each) and an individual project with a written report and an oral presentation. So the app does not predict exam questions. It aims at understanding the modules well enough to discuss them, and at doing the project well.
+:::
+
+Code blocks marked *Run Code* are interactive: R runs in your browser, no installation needed. The first run on a page takes a few seconds while R loads.

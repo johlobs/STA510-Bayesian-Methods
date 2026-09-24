@@ -1,0 +1,73 @@
+project:
+  type: website
+  output-dir: _site
+  pre-render: build_topics.py
+  resources:
+    - tasks/*.R
+
+website:
+  title: "STA510 — Bayesian Methods"
+  page-footer: "STA510 · University of Gothenburg · Built with Quarto + WebR"
+  page-navigation: true
+  navbar:
+    left:
+      - text: "Home"
+        href: index.qmd
+      - text: "Dashboard"
+        href: dashboard.qmd
+      - text: "Project"
+        href: project.qmd
+      - text: "Glossary"
+        href: glossary.qmd
+      - text: "About the content"
+        href: about.qmd
+      - text: "All courses"
+        href: "https://johlobs.github.io/"
+        target: "_blank"
+  sidebar:
+    style: "docked"
+    search: true
+    contents:
+      - text: "Home"
+        href: index.qmd
+      - section: "Track"
+        contents:
+          - dashboard.qmd
+          - glossary.qmd
+      - section: "Seminars 1–2: Foundations"
+        contents:
+          - module1.qmd
+          - module2.qmd
+      - section: "Seminars 3–4: Computing and checking"
+        contents:
+          - module3.qmd
+          - module4.qmd
+      - section: "Seminar 5 and lectures"
+        contents:
+          - module5.qmd
+          - module6.qmd
+      - section: "Individual project"
+        contents:
+          - project.qmd
+      - section: "Reference"
+        contents:
+          - about.qmd
+
+format:
+  html:
+    theme: flatly
+    css: custom.css
+    toc: true
+    toc-depth: 2
+    number-sections: false
+    self-contained: false
+    include-after-body:
+      - _topics-data.html
+      - _topics.html
+      - _quiz.html
+
+engine: knitr
+
+filters:
+  - webr
+  - _quiz-filter.lua

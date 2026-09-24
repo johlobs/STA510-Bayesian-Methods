@@ -1,0 +1,46 @@
+---
+title: "About the content"
+subtitle: "Sources, schedule, what is and is not included"
+---
+
+## Where the content comes from
+
+The structure, topics, notation and terminology follow the STA510 course notes, *Bayesian Statistical Methods* (Koen Simons, 2nd edition, August 2026), and the course syllabus. The explanations are written for this app. They are not copied from the notes.
+
+**Written for this app:** all examples and datasets (screening, fish, HbA1c, adherence, infections, heart rates, blood pressure trials, sodium readings, vaccination, clinics), the quizzes, browser exercises, RStudio tasks and solutions, figures and the project guide.
+
+**Not included on purpose:** the course notes' own examples, R scripts and datasets (taxicab, bit flips, school meals, infant surgery mortality, magnesium), and solutions to the exercises in the notes. Work through those in the notes and at the seminars. No ESS data are published here; the project starter script reads your own local copy.
+
+**Verification.** Every RStudio solution was run with R 4.4.3, brms 2.23.0 and rstan 2.32 before publishing, and the numbers quoted in the solutions come from those runs. Your numbers will differ slightly because MCMC is stochastic.
+
+## The syllabus's intended learning outcomes
+
+| Outcome (STA510 syllabus) | Main sections |
+|---|---|
+| Explain the difference between frequentist and Bayesian concepts of probability and inference | [1.1](module1.qmd#t1-1), [1.3](module1.qmd#t1-3), [1.8](module1.qmd#t1-8) |
+| Illustrate the role of prior, likelihood and posterior by means of conjugate priors | [1.4](module1.qmd#t1-4), [2.2](module2.qmd#t2-2), [2.3](module2.qmd#t2-3), [2.5](module2.qmd#t2-5), [2.6](module2.qmd#t2-6), [2.8](module2.qmd#t2-8) |
+| Explain the challenge of convergence in distribution of the MCMC sample and list common causes of failure | [3.2](module3.qmd#t3-2), [3.6](module3.qmd#t3-6), [3.8](module3.qmd#t3-8)–[3.10](module3.qmd#t3-10), [3.13](module3.qmd#t3-13) |
+| Use statistical software to fit a specified model and assess convergence | [3.8](module3.qmd#t3-8)–[3.12](module3.qmd#t3-12), RStudio tasks |
+| Prepare tables and figures that summarise the estimands by manipulating the sample from the joint posterior | [1.5](module1.qmd#t1-5), [3.12](module3.qmd#t3-12), [4.11](module4.qmd#t4-11) |
+| Specify posterior predictive checks to critically assess model fit | [4.1](module4.qmd#t4-1)–[4.3](module4.qmd#t4-3) |
+| Discuss subjectivity in data collection, prior and model specification in Bayesian and non-Bayesian workflows | [6.8](module6.qmd#t6-8), [6.3](module6.qmd#t6-3) |
+
+## Course schedule
+
+STA510 Bayesian Methods, 7.5 credits, Institute of Medicine, University of Gothenburg, autumn 2026, taught in English. Seminars are on Mondays; read the module before its seminar and submit a self-reflection by midnight the night before.
+
+| Seminar / event | Date | Module to read |
+|---|---|---|
+| Seminar 1: Concepts, discrete distributions | Mon 7 Sep | Introduction and Module 1 |
+| Seminar 2: Conjugate distributions | Mon 14 Sep | Module 2 |
+| Seminar 3: MCMC; convergence diagnostics | Mon 21 Sep | Module 3 |
+| Seminar 4: PPC diagnostics, stacking | **Mon 28 Sep** | Module 4 |
+| Lecture: Hierarchical models; Seminar 5: GLMM | October (see TimeEdit) | Module 5 |
+| Lecture: Bayesian workflow | October (see TimeEdit) | Module 6 |
+| Project presentations | week 43 (Mon 19 Oct per TimeEdit) | |
+
+Exercise sessions follow most seminars. Check TimeEdit and Canvas for rooms and any changes.
+
+## Software
+
+brms needs RStan and a C++ toolchain (Rtools on Windows). If `brm()` fails at "Compiling Stan program", check `pkgbuild::has_build_tools(debug = TRUE)`. Useful companions: `posterior` (draws and summaries), `bayesplot` (plots behind `pp_check()`), `loo` (LOO and stacking).

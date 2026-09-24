@@ -1,0 +1,257 @@
+---
+title: "Glossary"
+subtitle: "Terms from the course, with links to where they are explained"
+toc: false
+---
+
+Type in the box to filter. Each entry links to the module section where the term is explained. Quarto's search (top right) searches the full text of every page.
+
+```{=html}
+<input id="gl-filter" type="search" class="form-control" placeholder="Filter terms, e.g. R-hat, shrinkage, LOO …" style="max-width:420px;margin:0.5rem 0 1.5rem;">
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var input = document.getElementById('gl-filter');
+  input.addEventListener('input', function () {
+    var q = input.value.toLowerCase().trim();
+    document.querySelectorAll('.glossary dt').forEach(function (dt) {
+      var dd = dt.nextElementSibling;
+      var text = (dt.textContent + ' ' + (dd ? dd.textContent : '')).toLowerCase();
+      var show = !q || text.indexOf(q) !== -1;
+      dt.style.display = show ? '' : 'none';
+      if (dd) dd.style.display = show ? '' : 'none';
+    });
+    document.querySelectorAll('.glossary h2').forEach(function (h) {
+      var dl = h.parentNode.querySelector('dl');
+      if (!dl) return;
+      var any = Array.from(dl.querySelectorAll('dt')).some(function (dt) { return dt.style.display !== 'none'; });
+      h.style.display = any ? '' : 'none';
+    });
+  });
+});
+</script>
+```
+
+::: {.glossary}
+
+## A–C
+
+Adapt delta (`adapt_delta`)
+: Stan's target acceptance rate during warm-up (default 0.8). Raising it (0.95, 0.99) gives smaller steps and fewer divergent transitions, at the cost of speed. [M3 §3.7](module3.qmd#t3-7)
+
+AIC
+: Akaike information criterion: −2 × log-likelihood at the maximum + 2 × number of parameters. Ignores posterior uncertainty. [M4 §4.7](module4.qmd#t4-7)
+
+Autocorrelation
+: Correlation between MCMC draws a given number of iterations apart. High autocorrelation lowers the effective sample size. [M3 §3.10](module3.qmd#t3-10)
+
+Base-rate fallacy
+: Ignoring the prior probability (prevalence) when interpreting evidence, e.g. reading sensitivity as the positive predictive value. [M1 §1.3](module1.qmd#t1-3)
+
+Bayes factor
+: Ratio of the marginal likelihoods of two models; turns prior odds into posterior odds. Depends on the priors inside each model. [M1 §1.9](module1.qmd#t1-9)
+
+Bayes' rule
+: $p(\theta \mid y) = p(y \mid \theta)\,p(\theta) / p(y)$. [M1 §1.3](module1.qmd#t1-3)
+
+Bayesian model averaging (pseudo-BMA)
+: Averaging predictive distributions with weights proportional to $\exp(-\tfrac12 \text{WAIC})$ or the LOO equivalent. [M4 §4.10](module4.qmd#t4-10)
+
+Beta–Binomial
+: The conjugate pair Beta prior + binomial likelihood (posterior Beta(a + y, b + n − y)), and the posterior predictive distribution of a new count. [M2 §2.6](module2.qmd#t2-6) · [§2.9](module2.qmd#t2-9)
+
+Bias–variance trade-off
+: MSE = bias² + variance. Shrinkage accepts some bias for a larger drop in variance. [M5 §5.9](module5.qmd#t5-9)
+
+brms
+: R package that turns an lme4-style formula into a Stan program and fits it with NUTS. [M3 §3.11](module3.qmd#t3-11)
+
+Burn-in / warm-up
+: Initial MCMC iterations that are discarded. In Stan, warm-up also tunes the sampler. [M3 §3.4](module3.qmd#t3-4) · [§3.7](module3.qmd#t3-7)
+
+Calibration
+: Frequentist properties (bias, coverage) of a Bayesian procedure, studied by simulation. [M6 §6.6](module6.qmd#t6-6)
+
+Complete pooling
+: All groups assumed identical; one common parameter. [M5 §5.2](module5.qmd#t5-2)
+
+Confidence interval
+: An interval from a procedure that covers the true value in a stated share of hypothetical repetitions. Not a probability statement about the parameter. [M1 §1.8](module1.qmd#t1-8)
+
+Conjugate prior
+: A prior whose posterior belongs to the same family, so updating is arithmetic on its parameters. [M2 §2.6](module2.qmd#t2-6)
+
+Coverage
+: The share of intervals that contain the true value over repeated experiments. [M2 §2.8](module2.qmd#t2-8)
+
+Credible interval
+: An interval containing the parameter with a stated posterior probability, given model, prior and data. Equal-tailed or HPD. [M1 §1.5](module1.qmd#t1-5)
+
+Crossed random effects
+: Grouping factors that are not nested, e.g. region and survey round. [M5 §5.7](module5.qmd#t5-7)
+
+## D–K
+
+DIC
+: Deviance information criterion: posterior mean deviance plus a penalty from the posterior variance of the deviance. [M4 §4.7](module4.qmd#t4-7)
+
+Divergent transition
+: An HMC trajectory that broke down in a region of high curvature; a sign the draws may be biased. [M3 §3.7](module3.qmd#t3-7)
+
+Effective sample size (ESS; bulk and tail)
+: The number of independent draws with the same information as the autocorrelated MCMC draws. Bulk for means and SDs, tail for interval limits. [M3 §3.10](module3.qmd#t3-10)
+
+elpd
+: Expected log pointwise predictive density for new data; the target that WAIC and LOO estimate. Higher is better. [M4 §4.6](module4.qmd#t4-6)
+
+Empirical Bayes
+: Estimate the hyperparameters from the data, then plug them in as known. Ignores their uncertainty. [M5 §5.3](module5.qmd#t5-3)
+
+Equivalent sample size
+: How many observations a prior is "worth"; a + b − 2 for Beta(a, b) in the notes' convention. [M2 §2.7](module2.qmd#t2-7)
+
+Estimand
+: The quantity that answers the research question, often computed from parameters draw by draw. [M4 §4.11](module4.qmd#t4-11) · [Project step 1](project.qmd#p1)
+
+Gamma–Poisson
+: Conjugate pair for rates: Gamma(α, β) prior, Poisson counts with exposure E, posterior Gamma(α + y, β + E). [M2 §2.10](module2.qmd#t2-10)
+
+Generative model
+: A model that can simulate new data from parameters; required for posterior predictive distributions. [M1 §1.6](module1.qmd#t1-6)
+
+Gibbs sampler
+: MCMC that samples each parameter from its full conditional distribution in turn. [M3 §3.5](module3.qmd#t3-5)
+
+GLMM
+: Generalised linear mixed model: a GLM with group-level (random) effects. [M5 §5.7](module5.qmd#t5-7)
+
+Grid approximation
+: Evaluating prior × likelihood on a grid and normalising by the sum. Works for one or two parameters. [M1 §1.4](module1.qmd#t1-4) · [M2 §2.1](module2.qmd#t2-1)
+
+Hamiltonian Monte Carlo (HMC)
+: MCMC that uses the gradient of the log posterior to make long, well-aimed proposals. [M3 §3.7](module3.qmd#t3-7)
+
+HPD interval
+: Highest posterior density interval: the shortest region containing the stated probability. [M1 §1.5](module1.qmd#t1-5)
+
+Hyperprior / hyperparameter
+: The prior on the parameters of the group-level distribution (e.g. μ and τ). [M5 §5.3](module5.qmd#t5-3)
+
+Improper prior
+: A "prior" that does not integrate to 1, e.g. flat on the real line. May or may not give a proper posterior. [M2 §2.4](module2.qmd#t2-4)
+
+Jeffreys' prior
+: $p(\theta) \propto \sqrt{I(\theta)}$; invariant under reparameterisation. [M6 §6.7](module6.qmd#t6-7)
+
+Kullback–Leibler divergence
+: $\int g \log(g/f)$: a non-negative, asymmetric measure of how far a predictive distribution f is from the true g. [M4 §4.6](module4.qmd#t4-6)
+
+## L–P
+
+Likelihood
+: $p(y \mid \theta)$ as a function of θ for fixed data. [M1](module1.qmd#t1-4)
+
+linpred / epred / predict
+: brms functions giving draws of the linear predictor, the expected outcome, and a new observation. [M3 §3.12](module3.qmd#t3-12)
+
+LKJ prior
+: Prior for correlation matrices of varying effects; `lkj(2)` mildly favours correlations near 0. [M5 §5.8](module5.qmd#t5-8)
+
+LOO-CV / PSIS-LOO
+: Leave-one-out cross-validation, approximated from one fit by Pareto-smoothed importance sampling. [M4 §4.8](module4.qmd#t4-8)
+
+loo_compare
+: Ranks models by elpd; reports each model's difference from the best and the SE of the difference. [M4 §4.9](module4.qmd#t4-9)
+
+MAP
+: Maximum a posteriori: the posterior mode. [M1 §1.5](module1.qmd#t1-5)
+
+Markov chain Monte Carlo (MCMC)
+: Algorithms that generate a dependent sequence of draws whose distribution converges to the posterior. [M3 §3.4](module3.qmd#t3-4)
+
+Median odds ratio (MOR)
+: $\exp(0.954\,\tau)$ for a logistic GLMM: the median odds ratio between two random groups. [Project step 1](project.qmd#p1)
+
+Metropolis(–Hastings)
+: MCMC that proposes a move and accepts it with probability min(1, posterior ratio), corrected for asymmetric proposals in MH. [M3 §3.6](module3.qmd#t3-6)
+
+Monte Carlo standard error (MCSE)
+: The simulation error of an MCMC or Monte Carlo estimate; about posterior SD / √ESS for a mean. [M3 §3.2](module3.qmd#t3-2) · [§3.10](module3.qmd#t3-10)
+
+No pooling
+: Each group estimated from its own data only. [M5 §5.2](module5.qmd#t5-2)
+
+NUTS
+: No-U-Turn Sampler: HMC that chooses its path length automatically; Stan's default. [M3 §3.7](module3.qmd#t3-7)
+
+Pareto k̂
+: Diagnostic per observation in PSIS-LOO; values above 0.7 make the approximation unreliable. [M4 §4.8](module4.qmd#t4-8)
+
+Partial pooling
+: Group estimates shrunk towards the population mean by an amount learned from the data; the hierarchical model. [M5 §5.2](module5.qmd#t5-2)
+
+Posterior predictive check (PPC)
+: Comparing replicated data from the fitted model with the observed data. [M4 §4.2](module4.qmd#t4-2)
+
+Posterior predictive distribution
+: The distribution of new data after integrating over the posterior. [M1 §1.6](module1.qmd#t1-6)
+
+Posterior predictive p-value
+: $P(T(y^\text{rep}) \geq T(y) \mid y)$; near 0 or 1 signals misfit for statistic T. [M4 §4.3](module4.qmd#t4-3)
+
+Precision
+: 1 / variance. In the normal–normal model, precisions add. [M2 §2.2](module2.qmd#t2-2)
+
+Prior predictive check
+: Simulating data from the prior alone to see what the prior implies; `sample_prior = "only"` in brms. [M6 §6.2](module6.qmd#t6-2)
+
+## R–Z
+
+R-hat (Gelman–Rubin)
+: Ratio of total to within-chain variability; ≈ 1 when chains agree. The notes use < 1.1, current Stan advice < 1.01. [M3 §3.9](module3.qmd#t3-9)
+
+Reference prior
+: A prior chosen to maximise the data's influence (expected KL divergence from prior to posterior). [M6 §6.7](module6.qmd#t6-7)
+
+Rejection sampling
+: Draw from a proposal and accept with probability f/(c·g); exact but inefficient in many dimensions. [M3 §3.3](module3.qmd#t3-3)
+
+Sensitivity analysis (prior)
+: Refitting with alternative priors to see whether conclusions change. [M6 §6.5](module6.qmd#t6-5)
+
+Sequential updating
+: Using the posterior from one dataset as the prior for the next; gives the same result as one combined analysis. [M2 §2.5](module2.qmd#t2-5)
+
+Shrinkage
+: Pulling an estimate towards a prior or population mean, more for noisier estimates. [M2 §2.3](module2.qmd#t2-3) · [M5 §5.4](module5.qmd#t5-4)
+
+Simulation-based calibration (SBC)
+: Checking that posterior quantiles of true values drawn from the prior are uniform. [M6 §6.6](module6.qmd#t6-6)
+
+Stacking
+: Weighting models' predictive distributions to maximise LOO predictive performance of the mixture. [M4 §4.10](module4.qmd#t4-10)
+
+Student-t likelihood
+: Heavy-tailed alternative to the normal, robust to outliers; `family = student()`. [M4 §4.5](module4.qmd#t4-5)
+
+Temporal coherence
+: Specifying the prior before seeing the data and not revising it; broken whenever the data guide model changes. [M6 §6.3](module6.qmd#t6-3)
+
+Test statistic T(y)
+: A summary of the data used in a posterior predictive check. [M4 §4.3](module4.qmd#t4-3)
+
+Thinning
+: Keeping every k-th draw. Lowers autocorrelation but discards information; rarely useful with NUTS. [M3 §3.10](module3.qmd#t3-10)
+
+Trace plot
+: Parameter value against iteration, one line per chain. [M3 §3.8](module3.qmd#t3-8)
+
+Varying slopes
+: Group-specific slopes (and usually intercepts) with a covariance matrix: `(1 + x | group)`. [M5 §5.8](module5.qmd#t5-8)
+
+WAIC
+: Widely applicable information criterion: −2 × (lppd − p_WAIC), fully pointwise and Bayesian. [M4 §4.7](module4.qmd#t4-7)
+
+Weakly informative prior
+: A prior that rules out absurd values but otherwise lets the data speak. [M6 §6.4](module6.qmd#t6-4)
+
+:::

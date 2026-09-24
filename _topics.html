@@ -1,0 +1,343 @@
+<script>
+/* Topic and project-step tracking for STA510.
+   Reads window.STA510_TOPICS (written by build_topics.py) and:
+   1. adds flag badges and a status control under every topic heading,
+   2. adds done/total counters to the sidebar,
+   3. renders the dashboard when the page has <div id="sta510-dashboard">. */
+(function () {
+  'use strict';
+
+  var STORAGE_KEY = 'sta510_topic_status';
+  var TOPICS = window.STA510_TOPICS || [];
+
+  var TOPIC_LABELS = { '': 'Not reviewed', 'reviewed': 'Reviewed', 'confident': 'Confident' };
+  var STEP_LABELS  = { '': 'Not started',  'reviewed': 'In progress', 'confident': 'Done' };
+
+  var FLAG_BADGES = {
+    ilo: {
+      text: '🎯 Syllabus outcome',
+      title: 'Directly covers one of the intended learning outcomes in the STA510 syllabus. ' +
+             'The outcomes are official; linking them to this section was done for this app.'
+    },
+    project: {
+      text: '🧩 Needed for your project',
+      title: 'AI-inferred: a skill you will use in the individual GLMM project. Not stated by the teacher.'
+    }
+  };
+
+  var MODULE_TITLES = {
+    1: 'Bayesian concepts',
+    2: 'Conjugate priors',
+    3: 'MCMC and brms',
+    4: 'Model checks, comparison, stacking',
+    5: 'Hierarchical models',
+    6: 'Workflow and priors',
+    7: 'Individual project'
+  };
+
+  /* ── storage ───────────────────────────────────────────────────────── */
+  function load() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+    catch (e) { return {}; }
+  }
+  function save(state) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+    catch (e) { /* storage blocked: status still works for this page view */ }
+  }
+  var state = load();
+
+  function statusOf(id) { return state[id] || ''; }
+  function setStatus(id, value) {
+    if (value) { state[id] = value; } else { delete state[id]; }
+    save(state);
+    refreshAll();
+  }
+
+  /* ── helpers ───────────────────────────────────────────────────────── */
+  function labelsFor(t) { return t.kind === 'step' ? STEP_LABELS : TOPIC_LABELS; }
+  function hasFlag(t, f) { return (t.flags || []).indexOf(f) !== -1; }
+  function currentPage() {
+    var last = window.location.pathname.split('/').pop();
+    return last === '' ? 'index.html' : last;
+  }
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+  function summarise(list) {
+    var s = { total: list.length, reviewed: 0, confident: 0 };
+    list.forEach(function (t) {
+      var st = statusOf(t.id);
+      if (st === 'reviewed' || st === 'confident') s.reviewed++;
+      if (st === 'confident') s.confident++;
+    });
+    return s;
+  }
+  function pct(n, d) { return d === 0 ? 0 : Math.round(100 * n / d); }
+  function onlyTopics(list) { return list.filter(function (t) { return t.kind !== 'step'; }); }
+  function onlySteps(list)  { return list.filter(function (t) { return t.kind === 'step'; }); }
+
+  /* ── 1. status bars under headings ─────────────────────────────────── */
+  var controls = [];
+
+  function decorateTopics() {
+    var page = currentPage();
+    var pageTopics = TOPICS.filter(function (t) { return t.page === page; });
+    pageTopics.forEach(function (t) {
+      var section = document.getElementById(t.id);
+      if (!section) return;
+      var heading = section.tagName === 'H2' ? section : section.querySelector('h2');
+      if (!heading) return;
+
+      var bar = el('div', 'topic-bar');
+
+      (t.flags || []).forEach(function (f) {
+        if (!FLAG_BADGES[f]) return;
+        var badge = el('span', 'flag-badge flag-' + f, FLAG_BADGES[f].text);
+        badge.title = FLAG_BADGES[f].title;
+        bar.appendChild(badge);
+      });
+
+      var labels = labelsFor(t);
+      var group = el('span', 'status-group');
+      group.setAttribute('role', 'group');
+      group.setAttribute('aria-label', t.kind === 'step' ? 'Step status' : 'Review status');
+      ['', 'reviewed', 'confident'].forEach(function (value) {
+        var btn = el('button', 'status-btn status-' + (value || 'none'), labels[value]);
+        btn.type = 'button';
+        btn.addEventListener('click', function () { setStatus(t.id, value); });
+        group.appendChild(btn);
+        controls.push({ id: t.id, value: value, btn: btn });
+      });
+      bar.appendChild(group);
+
+      heading.parentNode.insertBefore(bar, heading.nextSibling);
+    });
+
+    if (pageTopics.length) {
+      var header = document.querySelector('#title-block-header') ||
+                   document.querySelector('.quarto-title-block');
+      if (header) {
+        var summary = el('div', 'page-progress');
+        summary.id = 'page-progress';
+        header.appendChild(summary);
+      }
+    }
+  }
+
+  function refreshControls() {
+    controls.forEach(function (c) {
+      c.btn.classList.toggle('active', statusOf(c.id) === c.value);
+      c.btn.setAttribute('aria-pressed', statusOf(c.id) === c.value ? 'true' : 'false');
+    });
+    var summary = document.getElementById('page-progress');
+    if (!summary) return;
+    var page = currentPage();
+    var list = TOPICS.filter(function (t) { return t.page === page; });
+    var s = summarise(list);
+    var isProject = onlySteps(list).length === list.length;
+    summary.innerHTML = '';
+    summary.appendChild(el('span', null, isProject
+      ? 'Project: ' + s.confident + '/' + s.total + ' steps done · ' + (s.reviewed - s.confident) + ' in progress'
+      : 'This module: ' + s.reviewed + '/' + s.total + ' topics reviewed · ' + s.confident + ' confident'));
+    var bar = el('span', 'mini-bar');
+    var fillR = el('span', 'fill-reviewed');  fillR.style.width = pct(s.reviewed, s.total) + '%';
+    var fillC = el('span', 'fill-confident'); fillC.style.width = pct(s.confident, s.total) + '%';
+    bar.appendChild(fillR); bar.appendChild(fillC);
+    summary.appendChild(bar);
+  }
+
+  /* ── 2. sidebar counters ───────────────────────────────────────────── */
+  function refreshSidebar() {
+    document.querySelectorAll('#quarto-sidebar a').forEach(function (link) {
+      var href = (link.getAttribute('href') || '').split('#')[0].split('/').pop();
+      var list = TOPICS.filter(function (t) { return t.page === href; });
+      if (!list.length) return;
+      var s = summarise(list);
+      var isProject = onlySteps(list).length === list.length;
+      var shown = isProject ? s.confident : s.reviewed;
+      var tag = link.querySelector('.sidebar-count');
+      if (!tag) {
+        tag = el('span', 'sidebar-count');
+        link.appendChild(tag);
+      }
+      tag.textContent = shown + '/' + s.total;
+      tag.classList.toggle('done', shown === s.total);
+      tag.title = isProject
+        ? s.confident + ' of ' + s.total + ' project steps done'
+        : s.reviewed + ' of ' + s.total + ' topics reviewed, ' + s.confident + ' confident';
+    });
+  }
+
+  /* ── 3. dashboard ──────────────────────────────────────────────────── */
+  function statCard(label, s, cls, stepCard) {
+    var card = el('div', 'dash-card ' + (cls || ''));
+    card.appendChild(el('div', 'dash-card-label', label));
+    var main = stepCard ? s.confident : s.reviewed;
+    card.appendChild(el('div', 'dash-card-value', pct(main, s.total) + '%'));
+    card.appendChild(el('div', 'dash-card-sub', stepCard
+      ? s.confident + '/' + s.total + ' done · ' + (s.reviewed - s.confident) + ' in progress'
+      : s.reviewed + '/' + s.total + ' reviewed · ' + s.confident + ' confident (' + pct(s.confident, s.total) + '%)'));
+    var bar = el('div', 'dash-bar');
+    var r = el('span', 'fill-reviewed');  r.style.width = pct(s.reviewed, s.total) + '%';
+    var c = el('span', 'fill-confident'); c.style.width = pct(s.confident, s.total) + '%';
+    bar.appendChild(r); bar.appendChild(c);
+    card.appendChild(bar);
+    return card;
+  }
+
+  function todoList(items, emptyText) {
+    if (!items.length) return el('p', 'dash-done', emptyText);
+    var ul = el('ul', 'dash-todo');
+    items.forEach(function (t) {
+      var li = el('li');
+      li.appendChild(el('span', 'dot dot-' + (statusOf(t.id) || 'none')));
+      var prefix = t.module === 7 ? 'Project · ' : 'M' + t.module + ' · ';
+      var link = el('a', null, prefix + t.title);
+      link.href = t.page + '#' + t.id;
+      li.appendChild(link);
+      li.appendChild(el('span', 'todo-status', labelsFor(t)[statusOf(t.id)]));
+      ul.appendChild(li);
+    });
+    return ul;
+  }
+
+  function renderDashboard() {
+    var root = document.getElementById('sta510-dashboard');
+    if (!root) return;
+    root.innerHTML = '';
+
+    var topics = onlyTopics(TOPICS);
+    var steps = onlySteps(TOPICS);
+
+    var cards = el('div', 'dash-cards');
+    cards.appendChild(statCard('All module topics', summarise(topics)));
+    cards.appendChild(statCard('🎯 Syllabus outcomes',
+      summarise(topics.filter(function (t) { return hasFlag(t, 'ilo'); })), 'card-ilo'));
+    cards.appendChild(statCard('🧩 Needed for the project',
+      summarise(topics.filter(function (t) { return hasFlag(t, 'project'); })), 'card-project'));
+    cards.appendChild(statCard('Project steps done', summarise(steps), 'card-steps', true));
+    root.appendChild(cards);
+
+    var legend = el('p', 'dash-legend');
+    legend.innerHTML = '<span class="key key-reviewed"></span> reviewed / in progress (includes the next level) &nbsp; ' +
+                       '<span class="key key-confident"></span> confident / done';
+    root.appendChild(legend);
+
+    /* Per-module table */
+    root.appendChild(el('h2', null, 'Progress per module'));
+    var table = el('table', 'dash-table table');
+    var thead = el('thead');
+    var hr = el('tr');
+    ['Module', 'Topics', '🎯', 'Reviewed', 'Confident'].forEach(function (h) { hr.appendChild(el('th', null, h)); });
+    thead.appendChild(hr); table.appendChild(thead);
+    var tbody = el('tbody');
+    for (var n = 1; n <= 6; n++) {
+      var list = topics.filter(function (t) { return t.module === n; });
+      if (!list.length) continue;
+      var s = summarise(list);
+      var tr = el('tr');
+      var tdName = el('td');
+      var a = el('a', null, 'M' + n + ' · ' + (MODULE_TITLES[n] || ''));
+      a.href = list[0].page;
+      tdName.appendChild(a);
+      tr.appendChild(tdName);
+      tr.appendChild(el('td', 'num', String(s.total)));
+      var nIlo = list.filter(function (t) { return hasFlag(t, 'ilo'); }).length;
+      tr.appendChild(el('td', 'num', nIlo ? String(nIlo) : '–'));
+      [['reviewed', s.reviewed], ['confident', s.confident]].forEach(function (pair) {
+        var td = el('td');
+        var bar = el('div', 'dash-bar small');
+        var f = el('span', 'fill-' + pair[0]); f.style.width = pct(pair[1], s.total) + '%';
+        bar.appendChild(f);
+        td.appendChild(bar);
+        td.appendChild(el('span', 'bar-label', pair[1] + '/' + s.total));
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    }
+    table.appendChild(tbody);
+    root.appendChild(table);
+
+    /* Project steps */
+    root.appendChild(el('h2', null, 'Project: steps not done yet'));
+    root.appendChild(el('p', 'dash-note', 'In workflow order. Click a step to open its guide on the project page.'));
+    root.appendChild(todoList(
+      steps.filter(function (t) { return statusOf(t.id) !== 'confident'; }),
+      'Every project step is marked done. 🎉'));
+
+    /* Syllabus outcomes not yet confident */
+    root.appendChild(el('h2', null, 'Syllabus outcomes not yet confident'));
+    root.appendChild(el('p', 'dash-note', 'Topics that cover an intended learning outcome, in course order.'));
+    root.appendChild(todoList(
+      topics.filter(function (t) { return hasFlag(t, 'ilo') && statusOf(t.id) !== 'confident'; }),
+      'Every syllabus-outcome topic is marked confident. 🎉'));
+
+    /* Backup / reset */
+    root.appendChild(el('h2', null, 'Backup and reset'));
+    root.appendChild(el('p', 'dash-note',
+      'Status is saved in this browser only. Export a backup before clearing browser data or switching device.'));
+    var tools = el('div', 'dash-tools');
+
+    var exportBtn = el('button', 'btn btn-outline-secondary btn-sm', 'Export progress (.json)');
+    exportBtn.addEventListener('click', function () {
+      var blob = new Blob([JSON.stringify(state, null, 1)], { type: 'application/json' });
+      var link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'sta510-progress.json';
+      link.click();
+      URL.revokeObjectURL(link.href);
+    });
+    tools.appendChild(exportBtn);
+
+    var importLabel = el('label', 'btn btn-outline-secondary btn-sm', 'Import progress');
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json';
+    input.style.display = 'none';
+    input.addEventListener('change', function () {
+      var file = input.files[0];
+      if (!file) return;
+      file.text().then(function (text) {
+        try {
+          state = JSON.parse(text);
+          save(state);
+          refreshAll();
+        } catch (e) { alert('That file is not a valid progress export.'); }
+      });
+    });
+    importLabel.appendChild(input);
+    tools.appendChild(importLabel);
+
+    var resetBtn = el('button', 'btn btn-outline-danger btn-sm', 'Reset all progress');
+    resetBtn.addEventListener('click', function () {
+      if (confirm('Reset every topic and project step to its starting status?')) {
+        state = {};
+        save(state);
+        refreshAll();
+      }
+    });
+    tools.appendChild(resetBtn);
+    root.appendChild(tools);
+  }
+
+  function refreshAll() {
+    refreshControls();
+    refreshSidebar();
+    renderDashboard();
+  }
+
+  function init() {
+    decorateTopics();
+    refreshAll();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>

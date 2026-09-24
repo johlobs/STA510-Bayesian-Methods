@@ -1,0 +1,178 @@
+---
+title: "Individual Project — A Bayesian GLMM on Your Own Data"
+subtitle: "Can you use the European Social Survey? · a ten-step workflow with a progress tracker · a tested starter script"
+engine: knitr
+---
+
+```{=html}
+<script>document.body.classList.add("block-project");</script>
+```
+
+The project carries most of the course credits: an **individual project with data material selected by the student**, presented **orally and in writing**. The syllabus describes the intended complexity as **a mixed model**. It is where every module comes together: a model and priors you can defend (Modules 1–2, 6), MCMC that has converged (3), checks that the model fits (4), and a hierarchical structure (5).
+
+This page answers the first question (can you use the European Social Survey?), then walks through the analysis in ten steps. Each step has a status control (**Not started / In progress / Done**) that is saved in your browser and summarised on the [dashboard](dashboard.qmd). The steps link back to the module sections they rely on.
+
+::: {.callout-important}
+## Dates and formal requirements
+Examination: the individual project, with a written report and an oral presentation (5.5 credits), plus participation in at least four seminars (2 credits). Project presentations are scheduled in week 43 (Monday 19 October 2026 according to TimeEdit). Check Canvas for the report deadline and any format requirements. This page gives study advice, not official requirements.
+:::
+
+## Can you use the European Social Survey? {#ess}
+
+**Very likely yes, and it is a good fit**, for three reasons:
+
+1. **It is "data material selected by the student".** ESS data are free for non-commercial use, including study and teaching, after registering at [ess.sikt.no](https://ess.sikt.no).
+2. **It has natural hierarchical structure**: respondents within regions, within countries, within survey rounds. That is exactly the "mixed model" level of complexity the syllabus asks for.
+3. **It has health outcomes**, fitting a course in the Institute of Medicine: self-rated health (`health`, 1 = very good … 5 = very bad), hampered by illness (`hlthhmp`), and in some rounds smoking, alcohol, height and weight.
+
+**Things to settle early:**
+
+- **Confirm with the teacher** that a survey dataset from outside health care is acceptable for your project. A short message with your research question and planned model is enough.
+- **Conditions of use.** You may not redistribute the data: keep the `.sav` files **out of public repositories** (including a public GitHub repo for your report). Cite each round and edition you use; the ESS website gives the exact citation with a DOI.
+- **Survey weights.** ESS provides design, post-stratification (`pspwght`) and analysis (`anweight`) weights. A Bayesian model does not use them automatically. Common options: (a) adjust for the variables the weights are built from (age, gender, education, region) and state that you model conditional on them; (b) mention multilevel regression and poststratification (MRP) as the model-based Bayesian route to population estimates. brms's `weights()` treats weights as frequency weights and changes the effective sample size, so do not use it without discussing that. Whatever you choose, **say so in the limitations**.
+- **Few groups.** Sweden has only 8 NUTS2 regions. A between-region SD estimated from 8 groups depends on its hyperprior, so a hyperprior sensitivity analysis becomes part of your results ([Task 5.5](module5.qmd#rstudio)). If you want more groups, download several countries and use `(1 | country)`.
+
+### The ESS files you already have
+
+From STA240 you have two Swedish ESS files:
+
+| File | Respondents | Rounds | Region |
+|---|---|---|---|
+| ESS round 11, Swedish subset | 1,230 | 11 only | NUTS2 (8 regions) |
+| Sweden, all rounds | 17,159 | 1–9 and 11 (round 10 is not in the file) | recorded from round 5: NUTS3 codes in rounds 5–8 (e.g. `SE110`), NUTS2 in rounds 9 and 11 (e.g. `SE11`) |
+
+The **all-rounds file is the better choice**: rounds 5–9 and 11 (six rounds) give region × survey round, a **crossed** random-effects structure, with 9,348 respondents who have complete data on self-rated health, age, gender and education (8 regions from 458 to 1,938 respondents; 1,210 to 1,834 per round). The first four characters of the region code give NUTS2 in every round, so harmonising takes one line: `substr(region, 1, 4)`. Both files contain `health`, `happy`, `stflife`, trust items (`trstprl`, `trstplc`, `ppltrst`), `agea`, `gndr`, `eisced`, `hinctnta`, `domicil`, `lrscale` and the weights.
+
+### Research questions that fit
+
+| Question | Outcome and family | Structure (brms) |
+|---|---|---|
+| Does self-rated good health differ between regions and survey rounds, given age, sex and education? | `health <= 2` → `bernoulli()` | `(1 \| region) + (1 \| round)`, crossed |
+| The same, using all five health categories | `health` → `cumulative("logit")`, an ordinal GLMM | same |
+| Has the education gradient in health changed across rounds? | binary health | `edu_level + (1 + edu_level \| round) + (1 \| region)`, varying slopes |
+| Does trust in the police vary more between regions than between rounds? | `trstplc` (0–10) → `gaussian()` or `cumulative()` | `(1 \| region) + (1 \| round)`; compare the two SDs |
+| (Multi-country download) Is income related to happiness similarly across countries? | `happy` → `gaussian()` or `cumulative()` | `income + (1 + income \| country)` |
+
+Pick a question where the **group-level part answers something**: how much regions differ (τ, or the median odds ratio), which regions stand out (region-specific estimates with shrinkage), whether an effect varies (varying slopes).
+
+::: {.callout-tip}
+## Starter script, tested on your all-rounds file
+[project-starter.R](tasks/project-starter.R) goes from the `.sav` file to a fitted crossed GLMM for self-rated good health: data preparation, model written as distributions, priors, a prior predictive check, fitting, diagnostics, posterior predictive checks by region, round and education, a LOO comparison and region-specific probabilities. Change the file path on line 20. Tested on the Swedish all-rounds file (9,348 respondents after cleaning): the whole script ran in about 11 minutes on a 4-core laptop, with every R-hat ≤ 1.01 and bulk ESS above 900. Even with `adapt_delta = 0.95`, one divergent transition out of 4,000 remained. The round-level SD is estimated close to zero with only six rounds, which creates a funnel-shaped posterior; Step 5 below says how to handle that. No results from the ESS data are shown on this public site.
+
+It is a **starting point, not your project**: replace the question, justify the priors in your own words, and add the checks and sensitivity analyses your question needs.
+:::
+
+# The ten steps
+
+## Step 1 · Research question and estimand {#p1 .topic .step flag="project"}
+
+Write down, in one or two sentences, **the question and the number(s) that will answer it**, before fitting anything. An estimand is a quantity computed from the posterior, for example:
+
+- the probability of good health for a defined reference person in each region;
+- the **median odds ratio** between regions, $\text{MOR} = \exp(0.954\,\tau)$: the median odds ratio between two randomly chosen regions for otherwise identical people. It is a standard way to report between-group variation in a logistic GLMM and is easy to compute from the draws of τ;
+- the difference in the probability of good health between high and low education, and whether it changed across rounds;
+- the ranking of regions with uncertainty.
+
+Relevant: [1.5](module1.qmd#t1-5), [4.11](module4.qmd#t4-11), [5.5](module5.qmd#t5-5).
+
+## Step 2 · Data: selection, cleaning, missing values {#p2 .topic .step flag="project"}
+
+- Choose rounds and respondents (for example rounds 5–11, age 18+). Report the numbers at each exclusion step.
+- ESS missing codes (refusal, don't know, not applicable: 7/8/9, 77/88/99, …) become `NA` when read with `haven::read_sav()`. Check with `table(x, useNA = "ifany")`.
+- Recode: binary outcome, age in decades centred at 50, education in 3 levels (ES-ISCED 1–2, 3–4, 5–7; code 55 "other" → NA), region harmonised to NUTS2.
+- **Missing data**: a complete-case analysis is simplest; report how many rows were dropped and discuss whether that could bias results. (brms can also impute within the model with `mi()`, or fit to multiply imputed datasets with `brm_multiple()`.)
+- Keep the raw data out of any public repository.
+
+## Step 3 · Model: likelihood and structure, written out {#p3 .topic .step flag="project"}
+
+Write the model **three ways**, as in [5.7](module5.qmd#t5-7):
+
+$$\begin{aligned}
+\text{good\_health}_i &\sim \text{Bernoulli}(p_i)\\
+\text{logit}(p_i) &= \beta_0 + \beta_1 \text{age}_i + \beta_2 \text{age}_i^2 + \beta_3 \text{female}_i + \beta_{\text{edu}[i]} + u_{\text{region}[i]} + v_{\text{round}[i]}\\
+u_j &\sim N(0, \tau_\text{region}^2), \qquad v_k \sim N(0, \tau_\text{round}^2)
+\end{aligned}$$
+
+brms: `good_health ~ age10 + I(age10^2) + female + edu_level + (1 | region2) + (1 | round)`. In words: each region and each survey round has its own baseline, drawn from a common distribution; age, sex and education shift everyone's log-odds by the same amount.
+
+Justify each choice: why this likelihood, why these covariates (confounders, precision), why random rather than fixed effects for region and round, why (or why not) varying slopes.
+
+## Step 4 · Priors and a prior predictive check {#p4 .topic .step flag="project"}
+
+- List every parameter that needs a prior: `get_prior(formula, data, family)`.
+- Choose weakly informative priors on a sensible scale ([6.4](module6.qmd#t6-4)) and **write a sentence of justification for each**. For example: "`normal(0, 1)` on log odds ratios: an odds ratio above 7 for a one-decade age difference or between education levels is implausible."
+- Fit with `sample_prior = "only"` and check the implied share with good health overall and by age ([6.2](module6.qmd#t6-2)). Put one prior predictive plot in the report.
+
+## Step 5 · Fit and check convergence {#p5 .topic .step flag="project"}
+
+- 4 chains, at least 2,000 iterations each; `seed = ` for reproducibility; `file = ` to save the fit.
+- Report: R-hat (all < 1.01), bulk and tail ESS (> 400; ≥ 1,000 for the parameters you report), **zero divergent transitions**, and trace plots for the key parameters ([3.8](module3.qmd#t3-8), [3.9](module3.qmd#t3-9), [3.10](module3.qmd#t3-10)).
+- Divergences in a GLMM: first increase `adapt_delta` to 0.95 or 0.99; if they persist, look at the group-level SD priors. They typically appear when a group-level SD is close to zero (few groups, little between-group variation): the posterior of the group effects then has a funnel shape. A single divergence out of 4,000 is usually harmless, but report it and show that the estimates do not change with `adapt_delta = 0.99`.
+- Individual-level Bernoulli models with 10,000+ rows take minutes. For a faster first pass, you can aggregate to binomial counts per combination of the categorical covariates: `successes | trials(n) ~ ...`. The posterior is identical when all covariates are categorical.
+
+## Step 6 · Posterior predictive checks {#p6 .topic .step flag="project"}
+
+Choose checks that match your question ([4.3](module4.qmd#t4-3), [4.4](module4.qmd#t4-4)):
+
+- the share with good health **by region**, **by round** and **by education** (`type = "stat_grouped"`);
+- the same by a variable **not in the model** (e.g. `domicil`, urban vs rural). `pp_check()` only accepts grouping variables that are in the model, so call `bayesplot::ppc_stat_grouped(y = ess$good_health, yrep = posterior_predict(fit), group = ess$domicil, stat = "mean")`, keeping `domicil` in the data frame next to the analysis variables;
+- for an ordinal model, `type = "bars"` or `"bars_grouped"`.
+
+Report which checks you made, show one or two plots, and state any feature the model misses.
+
+## Step 7 · Compare alternative models {#p7 .topic .step flag="project"}
+
+Fit one to three plausible alternatives and compare them with `loo_compare()` ([4.9](module4.qmd#t4-9)):
+
+- without the region term (is regional variation worth modelling?);
+- linear vs quadratic age;
+- with varying education slopes by round;
+- binary vs ordinal outcome (different outcomes cannot be compared with LOO; compare them with PPCs and interpretation instead).
+
+Check the Pareto $\hat k$ values. Use the rules of thumb (|elpd_diff| > 4 and > 2 SE), and remember that LOO predicts **new respondents in existing regions**.
+
+## Step 8 · Sensitivity analysis {#p8 .topic .step flag="project"}
+
+Refit the main model with **different priors for the group-level SDs** (e.g. `exponential(1)` vs `exponential(5)` vs half-Student-t) and, if relevant, for the key coefficient ([6.5](module6.qmd#t6-5)). With 8 regions the SD prior matters: show how τ, the MOR and the region-specific estimates change. Also consider a model choice: complete-case vs a sensitivity check on missing data, or with vs without adjusting for a debatable covariate.
+
+## Step 9 · Estimands from the draws: tables and figures {#p9 .topic .step flag="project"}
+
+Compute your estimands draw by draw and summarise ([3.12](module3.qmd#t3-12), [4.11](module4.qmd#t4-11), [5.6](module5.qmd#t5-6), [5.11](module5.qmd#t5-11)):
+
+```r
+draws <- as_draws_df(fit)
+mor <- exp(0.954 * draws$sd_region2__Intercept)          # median odds ratio between regions
+quantile(mor, c(0.025, 0.5, 0.975))
+
+# Probability of good health for a reference person in each region
+new_people <- data.frame(age10 = 0, female = 1, edu_level = "middle",
+                         region2 = sort(unique(ess$region2)), round = NA)
+prob <- posterior_epred(fit, newdata = new_people, re_formula = ~ (1 | region2))
+```
+
+One clear table (estimand, posterior median, 95% credible interval, probability of a relevant threshold) and one or two figures beat a full `summary()` printout. Interpret on the probability scale where possible.
+
+## Step 10 · Write-up and presentation {#p10 .topic .step flag="project"}
+
+A structure that follows the workflow:
+
+1. **Question and estimand.**
+2. **Data**: source and citation, rounds, exclusions with counts, recoding, missing data.
+3. **Model**: the three representations from Step 3; priors with justification; the prior predictive check.
+4. **Computation**: software versions (`packageVersion("brms")`), chains, iterations, diagnostics.
+5. **Model checking and comparison**: PPCs, LOO table.
+6. **Results**: estimands with credible intervals, in words ("the posterior probability that … is 0.93").
+7. **Sensitivity**: priors and model choices.
+8. **Discussion**: limitations (weights and representativeness, few regions, cross-sectional data and no causal claims, missing data), what changed during the analysis and why ([6.3](module6.qmd#t6-3)), and the role of subjective choices ([6.8](module6.qmd#t6-8)).
+
+For the **oral presentation**: one slide each for question, data, model (formula + one sentence), checks (one PPC plot), main result (one figure), sensitivity, limitations. Be ready to explain *why* each prior and why partial pooling.
+
+::: {.callout-note collapse="true"}
+## Common mistakes in Bayesian GLMM projects
+- Interpreting the summary before checking diagnostics.
+- Reporting `sd(Intercept)` on the log-odds scale without translating it (MOR, or probabilities for regions).
+- Calling the 95% interval a confidence interval, or interpreting it as one.
+- Leaving brms default priors without saying what they are.
+- Showing only `pp_check(fit)` for a binary outcome: the default density plot says almost nothing there. Use `stat` and `stat_grouped`.
+- Treating region estimates from a model with 8 regions as precise, without a hyperprior sensitivity analysis.
+:::

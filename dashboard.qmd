@@ -1,0 +1,21 @@
+---
+title: "Dashboard"
+subtitle: "Your review status across the six modules and your progress on the project"
+toc: false
+---
+
+Every topic section in the modules has a status control under its heading (**Not reviewed / Reviewed / Confident**), and every step on the [project page](project.qmd) has one too (**Not started / In progress / Done**). This page adds them up. Status is stored in this browser (localStorage): it stays when you close the tab, but not if you switch device or clear site data. Use *Export progress* below to keep a backup.
+
+::: {.callout-note collapse="true"}
+## How the two badges differ
+<span class="flag-badge flag-ilo">🎯 Syllabus outcome</span> The section covers one of the syllabus's intended learning outcomes: explaining Bayesian vs frequentist probability and inference; the role of prior, likelihood and posterior through conjugate priors; convergence of MCMC and causes of failure; fitting a model and assessing convergence; summarising estimands from the joint posterior; specifying posterior predictive checks; discussing subjectivity. The outcomes are official; the mapping to sections was made for this app.
+
+<span class="flag-badge flag-project">🧩 Needed for your project</span> An AI-inferred judgement that you will use the section in the individual GLMM project.
+:::
+
+::: {#sta510-dashboard}
+:::
+
+```{=html}
+<noscript>The dashboard needs JavaScript.</noscript>
+```
