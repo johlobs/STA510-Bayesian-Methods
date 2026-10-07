@@ -355,7 +355,10 @@ window.Quarto = {
     <h2 id="toc-title">On this page</h2>
    
   <ul class="collapse">
-  <li><a href="#ess" id="toc-ess" class="nav-link active" data-scroll-target="#ess">Can you use the European Social Survey?</a></li>
+  <li><a href="#bayesian-enough" id="toc-bayesian-enough" class="nav-link active" data-scroll-target="#bayesian-enough">What counts as “Bayesian enough”?</a></li>
+  <li><a href="#ess" id="toc-ess" class="nav-link" data-scroll-target="#ess">Can you use the European Social Survey?</a></li>
+  <li><a href="#other-data" id="toc-other-data" class="nav-link" data-scroll-target="#other-data">Other data sources</a></li>
+  <li><a href="#psychometrics" id="toc-psychometrics" class="nav-link" data-scroll-target="#psychometrics">Psychometrics: Bayesian item response models</a></li>
   <li><a href="#the-ten-steps" id="toc-the-ten-steps" class="nav-link" data-scroll-target="#the-ten-steps">The ten steps</a>
   <ul class="collapse">
   <li><a href="#p1" id="toc-p1" class="nav-link" data-scroll-target="#p1">Step 1 · Research question and estimand</a></li>
@@ -408,9 +411,69 @@ window.Quarto = {
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Examination: the individual project, with a written report and an oral presentation (5.5 credits), plus participation in at least four seminars (2 credits). Project presentations are scheduled in week 43 (Monday 19 October 2026 according to TimeEdit). Check Canvas for the report deadline and any format requirements. This page gives study advice, not official requirements.</p>
+<p>Examination: the individual project, with a written report and an oral presentation of 15–25 minutes (5.5 credits), plus participation in at least four seminars (2 credits). This page gives study advice, not official requirements: check Canvas for the exact dates and format.</p>
+<ul>
+<li><strong>Monday 19 October 2026</strong>: the teacher expects you to have settled your data and research question by then at the latest (Announcement 3). TimeEdit also lists project presentations in week 43.</li>
+<li><strong>Wednesday 28 October 2026</strong>: project deadline as noted by the student; confirm in Canvas, since it does not match the week 43 presentation slot.</li>
+</ul>
 </div>
 </div>
+<section id="bayesian-enough" class="level2">
+<h2 class="anchored" data-anchor-id="bayesian-enough">What counts as “Bayesian enough”?</h2>
+<p>The teacher’s guidance on projects (Announcement 3) sharpens the syllabus phrase “the intended level of complexity is that of a mixed model”. In short:</p>
+<ul>
+<li><strong>Do something in a Bayesian way.</strong> A coefficient in a linear model, with weak or improper priors, on a large dataset, is <em>not</em> enough: the numbers will be indistinguishable from a frequentist fit.</li>
+<li><strong>The prior matters when the information per parameter is small.</strong> Large datasets often contain many small datasets (small groups, rare categories, few observations per person). That is why a GLMM is the reference level (<a href="./module5.html">Module 5</a>).</li>
+<li><strong>Using Bayesian machinery pragmatically is fine</strong>: fitting a model you could not easily fit otherwise, or whose coefficients need careful interpretation. Examples mentioned: Gamma, multinomial and ordinal outcomes, zero-inflated and hurdle models, and values below a <strong>detection limit</strong> (missing not at random, so multiple imputation and the bootstrap do not solve it).</li>
+<li><strong>Large datasets are allowed</strong> but make MCMC slow. You may subsample, both while developing the code and for the whole project.</li>
+</ul>
+<section id="information-per-parameter" class="level3">
+<h3 class="anchored" data-anchor-id="information-per-parameter">Does Bayes add anything with thousands of observations?</h3>
+<p>Ask how much information there is <strong>per parameter</strong>, not in total:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Information</th>
+<th>Does the prior matter?</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>A fixed effect estimated from all rows</td>
+<td>thousands of observations</td>
+<td>hardly: say so honestly</td>
+</tr>
+<tr class="even">
+<td>A group effect for a small region, country or cell</td>
+<td>tens of observations</td>
+<td>yes: partial pooling, hyperprior sensitivity</td>
+</tr>
+<tr class="odd">
+<td>A person’s latent score in an item response model</td>
+<td>as many observations as items (often 5–10)</td>
+<td>a lot: the population distribution acts as the prior</td>
+</tr>
+<tr class="even">
+<td>A threshold for a rarely used answer category</td>
+<td>few observations</td>
+<td>yes</td>
+</tr>
+<tr class="odd">
+<td>A quantity derived from several parameters (a probability, a ranking, P(above a cutoff))</td>
+<td>inherits the uncertainty of all of them</td>
+<td>the draws give it directly</td>
+</tr>
+</tbody>
+</table>
+<p>A convincing way to show it in the report: fit the same model by maximum likelihood (ML) and with brms, and show where the estimates agree (well-informed parameters) and where they differ (sparse ones). Persons with all answers at the lowest or highest category are a typical case: their ML estimate is infinite, while the posterior is finite.</p>
+</section>
+</section>
 <section id="ess" class="level2">
 <h2 class="anchored" data-anchor-id="ess">Can you use the European Social Survey?</h2>
 <p><strong>Very likely yes, and it is a good fit</strong>, for three reasons:</p>
@@ -480,7 +543,7 @@ window.Quarto = {
 <tr class="odd">
 <td>Does self-rated good health differ between regions and survey rounds, given age, sex and education?</td>
 <td><code>health &lt;= 2</code> → <code>bernoulli()</code></td>
-<td><code>(1 \| region) + (1 \| round)</code>, crossed</td>
+<td><code>(1 | region) + (1 | round)</code>, crossed</td>
 </tr>
 <tr class="even">
 <td>The same, using all five health categories</td>
@@ -490,21 +553,143 @@ window.Quarto = {
 <tr class="odd">
 <td>Has the education gradient in health changed across rounds?</td>
 <td>binary health</td>
-<td><code>edu_level + (1 + edu_level \| round) + (1 \| region)</code>, varying slopes</td>
+<td><code>edu_level + (1 + edu_level | round) + (1 | region)</code>, varying slopes</td>
 </tr>
 <tr class="even">
 <td>Does trust in the police vary more between regions than between rounds?</td>
 <td><code>trstplc</code> (0–10) → <code>gaussian()</code> or <code>cumulative()</code></td>
-<td><code>(1 \| region) + (1 \| round)</code>; compare the two SDs</td>
+<td><code>(1 | region) + (1 | round)</code>; compare the two SDs</td>
 </tr>
 <tr class="odd">
 <td>(Multi-country download) Is income related to happiness similarly across countries?</td>
 <td><code>happy</code> → <code>gaussian()</code> or <code>cumulative()</code></td>
-<td><code>income + (1 + income \| country)</code></td>
+<td><code>income + (1 + income | country)</code></td>
 </tr>
 </tbody>
 </table>
 <p>Pick a question where the <strong>group-level part answers something</strong>: how much regions differ (τ, or the median odds ratio), which regions stand out (region-specific estimates with shrinkage), whether an effect varies (varying slopes).</p>
+<p>Questions that use outcome types from the teacher’s list (rounds 7 and 11 carry a health module with these variables):</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Question</th>
+<th>Outcome and family</th>
+<th>Why it is Bayesian enough</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>How many days a week do people exercise, by age, sex, education and region?</td>
+<td><code>dosprt</code> (0–7 days, many at 0 and at 7) → <code>dosprt | trials(7) ~ …</code> with <code>beta_binomial()</code></td>
+<td>a plain binomial fits badly; PPCs show why; small regions</td>
+</tr>
+<tr class="even">
+<td>How much alcohol do people drink on a weekend day?</td>
+<td><code>alcwknd</code> (grams, with zeros) → <code>hurdle_lognormal()</code></td>
+<td>two parts (whether, how much); the combined effect comes from the draws</td>
+</tr>
+<tr class="odd">
+<td>Are alcohol frequency and smoking related to depressive symptoms?</td>
+<td>the eight CES-D items (Center for Epidemiologic Studies Depression scale, rounds 3, 6, 7, 11) → ordinal item model, see <a href="#psychometrics">below</a></td>
+<td>person effects from 8 answers each; non-linear (e.g.&nbsp;J-shaped) relations</td>
+</tr>
+<tr class="even">
+<td>Is self-rated health in the latest round different from what earlier rounds predict?</td>
+<td>ordinal <code>health</code> in round 11, prior built from rounds 1–9</td>
+<td>the prior is the point of the analysis; sensitivity analysis follows naturally</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="other-data" class="level2">
+<h2 class="anchored" data-anchor-id="other-data">Other data sources</h2>
+<p>ESS is not the only option. Two free US sources fit a project on <strong>substance use</strong>, for example comparing people who started misusing prescription painkillers for pain with those who misused them recreationally. The groups plausibly have different confounders (age, chronic pain and access to care vs concurrent drug use and age at first use), which is worth drawing as one directed acyclic graph (DAG) per group.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Source</th>
+<th>Content</th>
+<th>Possible question and structure</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>NSDUH</strong> (National Survey on Drug Use and Health), public use file from SAMHSA</td>
+<td>yearly US survey; misuse of prescription opioids, tranquilizers, sedatives and stimulants, with the <strong>reason</strong> (pain, get high, relax, sleep, cope) and <strong>source</strong> (own prescription, friend, dealer) of the last misuse; DSM-5 based use disorder; psychological distress (K6) and depression</td>
+<td>Among people who misuse prescription opioids, does the risk of a use disorder differ between pain-motivated and recreational misuse? <code>(1 + group | year)</code>; or drug class × reason cells with partial pooling: <code>(1 | drug) + (1 | reason) + (1 | drug:reason)</code></td>
+</tr>
+<tr class="even">
+<td><strong>TEDS-A</strong> (Treatment Episode Data Set, Admissions), SAMHSA</td>
+<td>admissions to publicly funded substance use treatment; primary substance, age at first use, route of administration, <strong>state</strong></td>
+<td>Do people admitted for prescription opioids and for heroin differ in age at first use and injection, and how much does that vary between states? <code>(1 + substance | state)</code></td>
+</tr>
+</tbody>
+</table>
+<p>Things to settle with these sources:</p>
+<ul>
+<li><strong>Cross-sectional data.</strong> NSDUH asks about the <em>most recent</em> misuse, not how use began, and has no information on injuries. Frame the question as a comparison of associations, not as a trajectory from pain to dependence; following individuals over time requires register data and ethics approval.</li>
+<li><strong>Overlapping groups.</strong> Respondents can give several reasons. Fix the classification before fitting and vary it in the sensitivity analysis.</li>
+<li><strong>Survey design changes.</strong> NSDUH changed its data collection in 2020: do not pool years from before and after without discussing it.</li>
+<li><strong>Variable names</strong> differ between years: check every variable in the codebook of the year you download.</li>
+<li><strong>Ask the teacher</strong> whether a non-Swedish, non-clinical dataset is acceptable, with a short description of the question and model.</li>
+</ul>
+</section>
+<section id="psychometrics" class="level2">
+<h2 class="anchored" data-anchor-id="psychometrics">Psychometrics: Bayesian item response models</h2>
+<p>A <strong>Rasch model</strong> is a mixed model. For person <em>p</em> answering item <em>i</em> (yes = 1):</p>
+<p><span class="math display">\[\text{logit}\, P(y_{pi} = 1) = \theta_p - b_i, \qquad \theta_p \sim N(0, \sigma_\theta^2)\]</span></p>
+<p>θ is the person’s latent level (for example of depression) and <em>b</em> the item’s difficulty: how high θ must be before the answer becomes likely. With the data in <strong>long format</strong> (one row per person and item), it is a GLMM with crossed random effects:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Binary items (Rasch / one-parameter logistic model)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>fit_rasch <span class="ot">&lt;-</span> <span class="fu">brm</span>(response <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> item) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> person),</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>                 <span class="at">data =</span> items_long, <span class="at">family =</span> <span class="fu">bernoulli</span>())</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Ordinal items, item-specific thresholds (partial credit model)</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>fit_pcm <span class="ot">&lt;-</span> <span class="fu">brm</span>(response <span class="sc">|</span> <span class="fu">thres</span>(<span class="at">gr =</span> item) <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> person),</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>               <span class="at">data =</span> items_long, <span class="at">family =</span> <span class="fu">acat</span>(<span class="st">"logit"</span>))</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Differential item functioning (DIF): the effect of sex may differ by item</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>fit_dif <span class="ot">&lt;-</span> <span class="fu">brm</span>(response <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> female <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">+</span> female <span class="sc">|</span> item) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> person),</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>               <span class="at">data =</span> items_long, <span class="at">family =</span> <span class="fu">bernoulli</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>In brms the item effect enters with a plus sign, so <code>(1 | item)</code> estimates item <em>easiness</em> (minus the difficulty <em>b</em>). The standard reference is Bürkner (2021), “Bayesian Item Response Modeling in R with brms and Stan”, <em>Journal of Statistical Software</em> 100(5).</p>
+<p><strong>Why this is Bayesian enough:</strong> each person contributes only as many answers as there are items, so the person-level prior carries real weight; persons with all answers at one extreme get finite estimates; rare answer categories and DIF in small subgroups are estimated with shrinkage; posterior predictive checks per item replace the classical item fit statistics; LOO compares the Rasch model with a two-parameter model (items differ in discrimination) or with ordinal variants.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Question</th>
+<th>Data</th>
+<th>Structure</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Does the CES-D 8 scale fit a Rasch-type model, and do items function differently by sex, age or survey round (DIF, measurement invariance)?</td>
+<td>ESS rounds 3, 6, 7, 11</td>
+<td>ordinal item model; <code>(1 + female | item)</code>; with several countries <code>(1 | item:country)</code></td>
+</tr>
+<tr class="even">
+<td>Do the DSM-5 criteria for prescription opioid use disorder form one scale, and do <strong>tolerance</strong> and <strong>withdrawal</strong> behave differently for pain-motivated users? (DSM-5 does not count these two when the drug is taken as prescribed.)</td>
+<td>NSDUH, if the public file contains the individual criteria: check the codebook</td>
+<td>binary items; DIF by group</td>
+</tr>
+<tr class="odd">
+<td>Does psychological distress (K6, six items) function equally across substance use groups?</td>
+<td>NSDUH</td>
+<td>ordinal item model with DIF</td>
+</tr>
+</tbody>
+</table>
+<p>Practical points: 8 items × thousands of persons quickly gives tens of thousands of rows, so <strong>develop on a random subsample of persons</strong>. Reverse-code positively worded items (for example “were happy”) before fitting, and report how you did it.</p>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -519,7 +704,6 @@ window.Quarto = {
 <p>It is a <strong>starting point, not your project</strong>: replace the question, justify the priors in your own words, and add the checks and sensitivity analyses your question needs.</p>
 </div>
 </div>
-</section>
 </section>
 <section id="the-ten-steps" class="level1">
 <h1>The ten steps</h1>
@@ -600,14 +784,14 @@ u_j &amp;\sim N(0, \tau_\text{region}^2), \qquad v_k \sim N(0, \tau_\text{round}
 <section id="p9" class="level2 topic step" data-flag="project">
 <h2 class="topic step anchored" data-flag="project" data-anchor-id="p9">Step 9 · Estimands from the draws: tables and figures</h2>
 <p>Compute your estimands draw by draw and summarise (<a href="./module3.html#t3-12">3.12</a>, <a href="./module4.html#t4-11">4.11</a>, <a href="./module5.html#t5-6">5.6</a>, <a href="./module5.html#t5-11">5.11</a>):</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>draws <span class="ot">&lt;-</span> <span class="fu">as_draws_df</span>(fit)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>mor <span class="ot">&lt;-</span> <span class="fu">exp</span>(<span class="fl">0.954</span> <span class="sc">*</span> draws<span class="sc">$</span>sd_region2__Intercept)          <span class="co"># median odds ratio between regions</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">quantile</span>(mor, <span class="fu">c</span>(<span class="fl">0.025</span>, <span class="fl">0.5</span>, <span class="fl">0.975</span>))</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Probability of good health for a reference person in each region</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>new_people <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">age10 =</span> <span class="dv">0</span>, <span class="at">female =</span> <span class="dv">1</span>, <span class="at">edu_level =</span> <span class="st">"middle"</span>,</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>                         <span class="at">region2 =</span> <span class="fu">sort</span>(<span class="fu">unique</span>(ess<span class="sc">$</span>region2)), <span class="at">round =</span> <span class="cn">NA</span>)</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>prob <span class="ot">&lt;-</span> <span class="fu">posterior_epred</span>(fit, <span class="at">newdata =</span> new_people, <span class="at">re_formula =</span> <span class="sc">~</span> (<span class="dv">1</span> <span class="sc">|</span> region2))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>draws <span class="ot">&lt;-</span> <span class="fu">as_draws_df</span>(fit)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>mor <span class="ot">&lt;-</span> <span class="fu">exp</span>(<span class="fl">0.954</span> <span class="sc">*</span> draws<span class="sc">$</span>sd_region2__Intercept)          <span class="co"># median odds ratio between regions</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">quantile</span>(mor, <span class="fu">c</span>(<span class="fl">0.025</span>, <span class="fl">0.5</span>, <span class="fl">0.975</span>))</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Probability of good health for a reference person in each region</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>new_people <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">age10 =</span> <span class="dv">0</span>, <span class="at">female =</span> <span class="dv">1</span>, <span class="at">edu_level =</span> <span class="st">"middle"</span>,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>                         <span class="at">region2 =</span> <span class="fu">sort</span>(<span class="fu">unique</span>(ess<span class="sc">$</span>region2)), <span class="at">round =</span> <span class="cn">NA</span>)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>prob <span class="ot">&lt;-</span> <span class="fu">posterior_epred</span>(fit, <span class="at">newdata =</span> new_people, <span class="at">re_formula =</span> <span class="sc">~</span> (<span class="dv">1</span> <span class="sc">|</span> region2))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>One clear table (estimand, posterior median, 95% credible interval, probability of a relevant threshold) and one or two figures beat a full <code>summary()</code> printout. Interpret on the probability scale where possible.</p>
 </section>
 <section id="p10" class="level2 topic step" data-flag="project">
@@ -2066,467 +2250,929 @@ window.STA510_TOPICS = [
 </script>
 
 <script>
+
 /* Topic and project-step tracking for STA510.
+
    Reads window.STA510_TOPICS (written by build_topics.py) and:
+
    1. adds flag badges and a status control under every topic heading,
+
    2. adds done/total counters to the sidebar,
+
    3. renders the dashboard when the page has <div id="sta510-dashboard">. */
+
 (function () {
+
   'use strict';
 
+
+
   var STORAGE_KEY = 'sta510_topic_status';
+
   var TOPICS = window.STA510_TOPICS || [];
 
+
+
   var TOPIC_LABELS = { '': 'Not reviewed', 'reviewed': 'Reviewed', 'confident': 'Confident' };
+
   var STEP_LABELS  = { '': 'Not started',  'reviewed': 'In progress', 'confident': 'Done' };
 
+
+
   var FLAG_BADGES = {
+
     ilo: {
+
       text: '🎯 Syllabus outcome',
+
       title: 'Directly covers one of the intended learning outcomes in the STA510 syllabus. ' +
+
              'The outcomes are official; linking them to this section was done for this app.'
+
     },
+
     project: {
+
       text: '🧩 Needed for your project',
+
       title: 'AI-inferred: a skill you will use in the individual GLMM project. Not stated by the teacher.'
+
     }
+
   };
+
+
 
   var MODULE_TITLES = {
+
     1: 'Bayesian concepts',
+
     2: 'Conjugate priors',
+
     3: 'MCMC and brms',
+
     4: 'Model checks, comparison, stacking',
+
     5: 'Hierarchical models',
+
     6: 'Workflow and priors',
+
     7: 'Individual project'
+
   };
 
+
+
   /* ── storage ───────────────────────────────────────────────────────── */
+
   function load() {
+
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+
     catch (e) { return {}; }
+
   }
+
   function save(state) {
+
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
     catch (e) { /* storage blocked: status still works for this page view */ }
+
   }
+
   var state = load();
 
+
+
   function statusOf(id) { return state[id] || ''; }
+
   function setStatus(id, value) {
+
     if (value) { state[id] = value; } else { delete state[id]; }
+
     save(state);
+
     refreshAll();
+
   }
+
+
 
   /* ── helpers ───────────────────────────────────────────────────────── */
+
   function labelsFor(t) { return t.kind === 'step' ? STEP_LABELS : TOPIC_LABELS; }
+
   function hasFlag(t, f) { return (t.flags || []).indexOf(f) !== -1; }
+
   function currentPage() {
+
     var last = window.location.pathname.split('/').pop();
+
     return last === '' ? 'index.html' : last;
+
   }
+
   function el(tag, cls, text) {
+
     var e = document.createElement(tag);
+
     if (cls) e.className = cls;
+
     if (text !== undefined) e.textContent = text;
+
     return e;
+
   }
+
   function summarise(list) {
+
     var s = { total: list.length, reviewed: 0, confident: 0 };
+
     list.forEach(function (t) {
+
       var st = statusOf(t.id);
+
       if (st === 'reviewed' || st === 'confident') s.reviewed++;
+
       if (st === 'confident') s.confident++;
+
     });
+
     return s;
+
   }
+
   function pct(n, d) { return d === 0 ? 0 : Math.round(100 * n / d); }
+
   function onlyTopics(list) { return list.filter(function (t) { return t.kind !== 'step'; }); }
+
   function onlySteps(list)  { return list.filter(function (t) { return t.kind === 'step'; }); }
 
+
+
   /* ── 1. status bars under headings ─────────────────────────────────── */
+
   var controls = [];
 
+
+
   function decorateTopics() {
+
     var page = currentPage();
+
     var pageTopics = TOPICS.filter(function (t) { return t.page === page; });
+
     pageTopics.forEach(function (t) {
+
       var section = document.getElementById(t.id);
+
       if (!section) return;
+
       var heading = section.tagName === 'H2' ? section : section.querySelector('h2');
+
       if (!heading) return;
+
+
 
       var bar = el('div', 'topic-bar');
 
+
+
       (t.flags || []).forEach(function (f) {
+
         if (!FLAG_BADGES[f]) return;
+
         var badge = el('span', 'flag-badge flag-' + f, FLAG_BADGES[f].text);
+
         badge.title = FLAG_BADGES[f].title;
+
         bar.appendChild(badge);
+
       });
+
+
 
       var labels = labelsFor(t);
+
       var group = el('span', 'status-group');
+
       group.setAttribute('role', 'group');
+
       group.setAttribute('aria-label', t.kind === 'step' ? 'Step status' : 'Review status');
+
       ['', 'reviewed', 'confident'].forEach(function (value) {
+
         var btn = el('button', 'status-btn status-' + (value || 'none'), labels[value]);
+
         btn.type = 'button';
+
         btn.addEventListener('click', function () { setStatus(t.id, value); });
+
         group.appendChild(btn);
+
         controls.push({ id: t.id, value: value, btn: btn });
+
       });
+
       bar.appendChild(group);
 
+
+
       heading.parentNode.insertBefore(bar, heading.nextSibling);
+
     });
+
+
 
     if (pageTopics.length) {
+
       var header = document.querySelector('#title-block-header') ||
+
                    document.querySelector('.quarto-title-block');
+
       if (header) {
+
         var summary = el('div', 'page-progress');
+
         summary.id = 'page-progress';
+
         header.appendChild(summary);
+
       }
+
     }
+
   }
+
+
 
   function refreshControls() {
+
     controls.forEach(function (c) {
+
       c.btn.classList.toggle('active', statusOf(c.id) === c.value);
+
       c.btn.setAttribute('aria-pressed', statusOf(c.id) === c.value ? 'true' : 'false');
+
     });
+
     var summary = document.getElementById('page-progress');
+
     if (!summary) return;
+
     var page = currentPage();
+
     var list = TOPICS.filter(function (t) { return t.page === page; });
+
     var s = summarise(list);
+
     var isProject = onlySteps(list).length === list.length;
+
     summary.innerHTML = '';
+
     summary.appendChild(el('span', null, isProject
+
       ? 'Project: ' + s.confident + '/' + s.total + ' steps done · ' + (s.reviewed - s.confident) + ' in progress'
+
       : 'This module: ' + s.reviewed + '/' + s.total + ' topics reviewed · ' + s.confident + ' confident'));
+
     var bar = el('span', 'mini-bar');
+
     var fillR = el('span', 'fill-reviewed');  fillR.style.width = pct(s.reviewed, s.total) + '%';
+
     var fillC = el('span', 'fill-confident'); fillC.style.width = pct(s.confident, s.total) + '%';
+
     bar.appendChild(fillR); bar.appendChild(fillC);
+
     summary.appendChild(bar);
+
   }
+
+
 
   /* ── 2. sidebar counters ───────────────────────────────────────────── */
+
   function refreshSidebar() {
+
     document.querySelectorAll('#quarto-sidebar a').forEach(function (link) {
+
       var href = (link.getAttribute('href') || '').split('#')[0].split('/').pop();
+
       var list = TOPICS.filter(function (t) { return t.page === href; });
+
       if (!list.length) return;
+
       var s = summarise(list);
+
       var isProject = onlySteps(list).length === list.length;
+
       var shown = isProject ? s.confident : s.reviewed;
+
       var tag = link.querySelector('.sidebar-count');
+
       if (!tag) {
+
         tag = el('span', 'sidebar-count');
+
         link.appendChild(tag);
+
       }
+
       tag.textContent = shown + '/' + s.total;
+
       tag.classList.toggle('done', shown === s.total);
+
       tag.title = isProject
+
         ? s.confident + ' of ' + s.total + ' project steps done'
+
         : s.reviewed + ' of ' + s.total + ' topics reviewed, ' + s.confident + ' confident';
+
     });
+
   }
+
+
 
   /* ── 3. dashboard ──────────────────────────────────────────────────── */
+
   function statCard(label, s, cls, stepCard) {
+
     var card = el('div', 'dash-card ' + (cls || ''));
+
     card.appendChild(el('div', 'dash-card-label', label));
+
     var main = stepCard ? s.confident : s.reviewed;
+
     card.appendChild(el('div', 'dash-card-value', pct(main, s.total) + '%'));
+
     card.appendChild(el('div', 'dash-card-sub', stepCard
+
       ? s.confident + '/' + s.total + ' done · ' + (s.reviewed - s.confident) + ' in progress'
+
       : s.reviewed + '/' + s.total + ' reviewed · ' + s.confident + ' confident (' + pct(s.confident, s.total) + '%)'));
+
     var bar = el('div', 'dash-bar');
+
     var r = el('span', 'fill-reviewed');  r.style.width = pct(s.reviewed, s.total) + '%';
+
     var c = el('span', 'fill-confident'); c.style.width = pct(s.confident, s.total) + '%';
+
     bar.appendChild(r); bar.appendChild(c);
+
     card.appendChild(bar);
+
     return card;
+
   }
+
+
 
   function todoList(items, emptyText) {
+
     if (!items.length) return el('p', 'dash-done', emptyText);
+
     var ul = el('ul', 'dash-todo');
+
     items.forEach(function (t) {
+
       var li = el('li');
+
       li.appendChild(el('span', 'dot dot-' + (statusOf(t.id) || 'none')));
+
       var prefix = t.module === 7 ? 'Project · ' : 'M' + t.module + ' · ';
+
       var link = el('a', null, prefix + t.title);
+
       link.href = t.page + '#' + t.id;
+
       li.appendChild(link);
+
       li.appendChild(el('span', 'todo-status', labelsFor(t)[statusOf(t.id)]));
+
       ul.appendChild(li);
+
     });
+
     return ul;
+
   }
+
+
 
   function renderDashboard() {
+
     var root = document.getElementById('sta510-dashboard');
+
     if (!root) return;
+
     root.innerHTML = '';
 
+
+
     var topics = onlyTopics(TOPICS);
+
     var steps = onlySteps(TOPICS);
 
+
+
     var cards = el('div', 'dash-cards');
+
     cards.appendChild(statCard('All module topics', summarise(topics)));
+
     cards.appendChild(statCard('🎯 Syllabus outcomes',
+
       summarise(topics.filter(function (t) { return hasFlag(t, 'ilo'); })), 'card-ilo'));
+
     cards.appendChild(statCard('🧩 Needed for the project',
+
       summarise(topics.filter(function (t) { return hasFlag(t, 'project'); })), 'card-project'));
+
     cards.appendChild(statCard('Project steps done', summarise(steps), 'card-steps', true));
+
     root.appendChild(cards);
 
+
+
     var legend = el('p', 'dash-legend');
+
     legend.innerHTML = '<span class="key key-reviewed"></span> reviewed / in progress (includes the next level) &nbsp; ' +
+
                        '<span class="key key-confident"></span> confident / done';
+
     root.appendChild(legend);
 
+
+
     /* Per-module table */
+
     root.appendChild(el('h2', null, 'Progress per module'));
+
     var table = el('table', 'dash-table table');
+
     var thead = el('thead');
+
     var hr = el('tr');
+
     ['Module', 'Topics', '🎯', 'Reviewed', 'Confident'].forEach(function (h) { hr.appendChild(el('th', null, h)); });
+
     thead.appendChild(hr); table.appendChild(thead);
+
     var tbody = el('tbody');
+
     for (var n = 1; n <= 6; n++) {
+
       var list = topics.filter(function (t) { return t.module === n; });
+
       if (!list.length) continue;
+
       var s = summarise(list);
+
       var tr = el('tr');
+
       var tdName = el('td');
+
       var a = el('a', null, 'M' + n + ' · ' + (MODULE_TITLES[n] || ''));
+
       a.href = list[0].page;
+
       tdName.appendChild(a);
+
       tr.appendChild(tdName);
+
       tr.appendChild(el('td', 'num', String(s.total)));
+
       var nIlo = list.filter(function (t) { return hasFlag(t, 'ilo'); }).length;
+
       tr.appendChild(el('td', 'num', nIlo ? String(nIlo) : '–'));
+
       [['reviewed', s.reviewed], ['confident', s.confident]].forEach(function (pair) {
+
         var td = el('td');
+
         var bar = el('div', 'dash-bar small');
+
         var f = el('span', 'fill-' + pair[0]); f.style.width = pct(pair[1], s.total) + '%';
+
         bar.appendChild(f);
+
         td.appendChild(bar);
+
         td.appendChild(el('span', 'bar-label', pair[1] + '/' + s.total));
+
         tr.appendChild(td);
+
       });
+
       tbody.appendChild(tr);
+
     }
+
     table.appendChild(tbody);
+
     root.appendChild(table);
 
+
+
     /* Project steps */
+
     root.appendChild(el('h2', null, 'Project: steps not done yet'));
+
     root.appendChild(el('p', 'dash-note', 'In workflow order. Click a step to open its guide on the project page.'));
+
     root.appendChild(todoList(
+
       steps.filter(function (t) { return statusOf(t.id) !== 'confident'; }),
+
       'Every project step is marked done. 🎉'));
 
+
+
     /* Syllabus outcomes not yet confident */
+
     root.appendChild(el('h2', null, 'Syllabus outcomes not yet confident'));
+
     root.appendChild(el('p', 'dash-note', 'Topics that cover an intended learning outcome, in course order.'));
+
     root.appendChild(todoList(
+
       topics.filter(function (t) { return hasFlag(t, 'ilo') && statusOf(t.id) !== 'confident'; }),
+
       'Every syllabus-outcome topic is marked confident. 🎉'));
 
+
+
     /* Backup / reset */
+
     root.appendChild(el('h2', null, 'Backup and reset'));
+
     root.appendChild(el('p', 'dash-note',
+
       'Status is saved in this browser only. Export a backup before clearing browser data or switching device.'));
+
     var tools = el('div', 'dash-tools');
 
+
+
     var exportBtn = el('button', 'btn btn-outline-secondary btn-sm', 'Export progress (.json)');
+
     exportBtn.addEventListener('click', function () {
+
       var blob = new Blob([JSON.stringify(state, null, 1)], { type: 'application/json' });
+
       var link = document.createElement('a');
+
       link.href = URL.createObjectURL(blob);
+
       link.download = 'sta510-progress.json';
+
       link.click();
+
       URL.revokeObjectURL(link.href);
+
     });
+
     tools.appendChild(exportBtn);
 
+
+
     var importLabel = el('label', 'btn btn-outline-secondary btn-sm', 'Import progress');
+
     var input = document.createElement('input');
+
     input.type = 'file';
+
     input.accept = 'application/json';
+
     input.style.display = 'none';
+
     input.addEventListener('change', function () {
+
       var file = input.files[0];
+
       if (!file) return;
+
       file.text().then(function (text) {
+
         try {
+
           state = JSON.parse(text);
+
           save(state);
+
           refreshAll();
+
         } catch (e) { alert('That file is not a valid progress export.'); }
+
       });
+
     });
+
     importLabel.appendChild(input);
+
     tools.appendChild(importLabel);
 
+
+
     var resetBtn = el('button', 'btn btn-outline-danger btn-sm', 'Reset all progress');
+
     resetBtn.addEventListener('click', function () {
+
       if (confirm('Reset every topic and project step to its starting status?')) {
+
         state = {};
+
         save(state);
+
         refreshAll();
+
       }
+
     });
+
     tools.appendChild(resetBtn);
+
     root.appendChild(tools);
+
   }
+
+
 
   function refreshAll() {
+
     refreshControls();
+
     refreshSidebar();
+
     renderDashboard();
+
   }
+
+
 
   function init() {
+
     decorateTopics();
+
     refreshAll();
+
   }
 
+
+
   if (document.readyState === 'loading') {
+
     document.addEventListener('DOMContentLoaded', init);
+
   } else {
+
     init();
+
   }
+
 })();
+
 </script>
+
 <script>
+
 (function () {
+
   'use strict';
 
+
+
   function shuffle(arr) {
+
     for (var i = arr.length - 1; i > 0; i--) {
+
       var j = Math.floor(Math.random() * (i + 1));
+
       var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+
     }
+
     return arr;
+
   }
+
+
 
   function buildQuiz(src) {
+
     var question = src.getAttribute('data-question') || '';
+
     var opts     = shuffle(Array.from(src.querySelectorAll('.q-opt')));
+
     var expText  = (src.querySelector('.q-exp') || {}).textContent || '';
+
     var ctxEl    = src.querySelector('.q-ctx');
 
+
+
     var wrap = document.createElement('div');
+
     wrap.style.cssText = [
+
       'border:1px solid #dee2e6;border-radius:8px;',
+
       'padding:1rem 1.25rem;margin:1.2rem 0;background:#f8f9fa;'
+
     ].join('');
 
+
+
     if (ctxEl) {
+
       var ctx = document.createElement('div');
+
       ctx.style.cssText = [
+
         'background:#e9ecef;border-radius:4px;',
+
         'padding:0.5rem 0.85rem;margin-bottom:0.8rem;',
+
         'overflow-x:auto;'
+
       ].join('');
+
       ctx.innerHTML = ctxEl.innerHTML;
+
       wrap.appendChild(ctx);
+
     }
 
+
+
     var qEl = document.createElement('p');
+
     qEl.style.cssText = 'font-weight:600;margin:0 0 0.7rem;font-size:0.93rem;';
+
     qEl.textContent = '\u2753  ' + question;
+
     wrap.appendChild(qEl);
 
+
+
     var answered = false;
+
     var btns = opts.map(function (opt) {
+
       var correct = opt.getAttribute('data-correct') === 'true';
+
       var btn = document.createElement('button');
+
       btn.textContent = opt.textContent.trim();
+
       btn.setAttribute('data-correct', String(correct));
+
       btn.style.cssText = [
+
         'display:block;width:100%;text-align:left;',
+
         'padding:0.38rem 0.85rem;margin:0.28rem 0;',
+
         'border:1px solid #ced4da;border-radius:5px;',
+
         'background:#fff;cursor:pointer;font-size:0.87rem;',
+
         'transition:background 0.12s,border-color 0.12s;'
+
       ].join('');
+
       btn.addEventListener('mouseover', function () {
+
         if (!answered) btn.style.background = '#e9ecef';
+
       });
+
       btn.addEventListener('mouseout', function () {
+
         if (!answered) btn.style.background = '#fff';
+
       });
+
       btn.addEventListener('click', function () {
+
         if (answered) return;
+
         answered = true;
+
         btns.forEach(function (b) {
+
           var c = b.getAttribute('data-correct') === 'true';
+
           b.style.cursor = 'default';
+
           b.style.fontWeight = c ? '600' : 'normal';
+
           if (c) {
+
             b.style.background  = '#d4edda';
+
             b.style.borderColor = '#28a745';
+
             b.style.color       = '#155724';
+
             b.textContent       = '\u2713  ' + b.textContent;
+
           } else {
+
             b.style.background  = '#f8d7da';
+
             b.style.borderColor = '#dc3545';
+
             b.style.color       = '#721c24';
+
           }
+
         });
+
         if (expText) {
+
           var box = document.createElement('div');
+
           box.style.cssText = [
+
             'margin-top:0.7rem;padding:0.55rem 0.9rem;',
+
             'background:#e8f4fd;border-left:3px solid #0d6efd;',
+
             'border-radius:4px;font-size:0.85rem;color:#1a1a2e;'
+
           ].join('');
+
           box.textContent = expText;
+
           wrap.appendChild(box);
+
         }
+
         var retry = document.createElement('button');
+
         retry.textContent = 'Try again';
+
         retry.style.cssText = [
+
           'margin-top:0.5rem;padding:0.22rem 0.75rem;font-size:0.78rem;',
+
           'border:1px solid #adb5bd;border-radius:4px;',
+
           'background:#fff;cursor:pointer;color:#6c757d;'
+
         ].join('');
+
         retry.addEventListener('click', function () {
+
           wrap.parentNode.replaceChild(buildQuiz(src), wrap);
+
         });
+
         wrap.appendChild(retry);
+
       });
+
       wrap.appendChild(btn);
+
       return btn;
+
     });
+
+
 
     return wrap;
+
   }
+
+
 
   function init() {
+
     document.querySelectorAll('.sta510-quiz').forEach(function (div) {
+
       div.parentNode.replaceChild(buildQuiz(div), div);
+
     });
+
   }
 
+
+
   if (document.readyState === 'loading') {
+
     document.addEventListener('DOMContentLoaded', init);
+
   } else {
+
     init();
+
   }
+
 })();
+
 </script>
+
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     const icon = "";
