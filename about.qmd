@@ -37,7 +37,7 @@ STA510 Bayesian Methods, 7.5 credits, Institute of Medicine, University of Gothe
 | Seminar 4: PPC diagnostics, stacking | **Mon 28 Sep** | Module 4 |
 | Lecture: Hierarchical models; Seminar 5: GLMM | October (see TimeEdit) | Module 5 |
 | Lecture: Bayesian workflow | October (see TimeEdit) | Module 6 |
-| Project presentations | week 43 (Mon 19 Oct per TimeEdit) | |
+| Project deadline | **Wed 28 Oct** (data and question settled by Mon 19 Oct) | |
 
 Exercise sessions follow most seminars. Check TimeEdit and Canvas for rooms and any changes.
 

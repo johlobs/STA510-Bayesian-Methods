@@ -16,8 +16,8 @@ This page answers the first question (can you use the European Social Survey?), 
 ## Dates and formal requirements
 Examination: the individual project, with a written report and an oral presentation of 15–25 minutes (5.5 credits), plus participation in at least four seminars (2 credits). This page gives study advice, not official requirements: check Canvas for the exact dates and format.
 
-- **Monday 19 October 2026**: the teacher expects you to have settled your data and research question by then at the latest (Announcement 3). TimeEdit also lists project presentations in week 43.
-- **Wednesday 28 October 2026**: project deadline as noted by the student; confirm in Canvas, since it does not match the week 43 presentation slot.
+- **Monday 19 October 2026**: data and research question settled at the latest (Announcement 3).
+- **Wednesday 28 October 2026**: project deadline.
 :::
 
 ## What counts as "Bayesian enough"? {#bayesian-enough}
