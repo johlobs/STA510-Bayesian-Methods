@@ -9,7 +9,7 @@ Quarto + WebR study reference and project tracker for STA510 Bayesian Methods (G
 
 ## Pages
 - `module1.qmd` … `module6.qmd`: one page per course-notes module. Structure: intro · sources callout · "Before you start" callout · **Part A · Concepts** (topic sections with quizzes, misconception callouts) · When to use · Limitations · **Part B · Practice** (WebR browser exercises, then RStudio brms tasks with hidden solutions) · Why-questions · Spaced review
-- `project.qmd`: ESS feasibility + ten project steps (`.step` topics with Not started / In progress / Done)
+- `project.qmd`: generic project to-do: teacher guidance + ten steps (`.step` topics with Not started / In progress / Done) with clickable task checkboxes (localStorage `sta510_project_todo`). Never write the student's own project choices or data here (public site).
 - `dashboard.qmd`, `glossary.qmd`, `about.qmd`, `index.qmd`
 - `tasks/*.R`: downloadable RStudio task scripts (published via `project: resources`). Every solution on the pages was run with these scripts; numbers quoted come from those runs.
 
@@ -34,7 +34,7 @@ Level-2 headings:
 ## Content rules
 - English; define abbreviations on first use per page.
 - **Own examples only.** Never reproduce the course notes' examples, scripts or datasets (taxicab, bit flips, school meals, infant mortality, magnesium) or solve the notes' exercises. The site is public.
-- **No ESS data** in the repo or on the site; the project starter script reads the user's local file.
+- **No project data or project choices** in the repo or on the site.
 - Quiz options roughly equal length; the correct one must not stand out.
 - Any number stated in a solution must come from an actual run (rerun `tasks/*.R` after changing a task).
 - R code: explicit, readable variable names; no compact metaprogramming.

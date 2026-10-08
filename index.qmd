@@ -43,7 +43,7 @@ This app follows the six modules of the STA510 course notes, from what a probabi
 
 1. **Read a module, Part A first.** Part A is concepts with quizzes and needs no code. Every section has a status control under its heading: **Not reviewed / Reviewed / Confident**. Click as you go.
 2. **Then Part B.** Small R exercises run in your browser (*Run Code*); the **RStudio tasks** use brms on your own computer. Each task simulates its own data and has a hidden solution, tested with brms 2.23.
-3. **Plan the project** on the [project page](project.qmd): whether ESS works for you, ten steps with a status tracker (**Not started / In progress / Done**) and a starter script tested on your Swedish ESS file.
+3. **Work through the project** on the [project page](project.qmd): a to-do list in ten steps, each with a status tracker (**Not started / In progress / Done**) and checkboxes for the tasks within it.
 4. **Check the [dashboard](dashboard.qmd)** for what is left, and look up terms in the [glossary](glossary.qmd) or with search (top right).
 
 ## What the badges mean
